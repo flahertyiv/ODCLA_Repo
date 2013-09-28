@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta http-equiv="Content-Language" content="en" />
+
+  <link rel="stylesheet" href="leaflet.css" />
+</head>
+<body>
+
+<div id="map" style="position: absolute; top: 0px; bottom: 0px; left: 0px; right: 0px"></div>
+
+<script src="leaflet.js"></script>
+
+<script>
+
+L.CRS.SeatGeek = L.extend({}, L.CRS, {
+  projection: L.Projection.LonLat,
+	transformation: new L.Transformation(0.35, 0, 0.35, 0),
+
+	scale: function (zoom) {
+		return Math.pow(2, zoom);
+	}
+});
+
+var map = L.map("map", {
+  minZoom: 1,
+  maxZoom: 4,
+  crs: L.CRS.SeatGeek
+}).setView([500, 500], 1);
+
+L.tileLayer('http://{s}.tiles.seatgeek.com/v3/maps/{mapId}/{z}/{x}/{y}.png', {
+  mapId: "v3719-1933-2",
+  tileSize: 350,
+  minZoom: 1,
+  maxZoom: 4,
+  noWrap: true
+}).addTo(map);
+
+var circle = L.circle([600, 600], -3400000, {
+    color: 'red',
+    fillColor: '#f03',
+    fillOpacity: 0.5
+}).addTo(map);
+
+
+</script>
+
+
+</body>
+</html>
