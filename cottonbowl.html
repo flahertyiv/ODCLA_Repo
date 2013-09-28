@@ -3,49 +3,83 @@
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
   <meta http-equiv="Content-Language" content="en" />
-
   <link rel="stylesheet" href="leaflet.css" />
 </head>
+
 <body>
 
 <div id="map" style="position: absolute; top: 0px; bottom: 0px; left: 0px; right: 0px"></div>
 
+<script src="//cdnjs.cloudflare.com/ajax/libs/zepto/1.0/zepto.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/underscore.js/1.5.1/underscore-min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/leaflet/0.6.3/leaflet.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.2.2/d3.v3.min.js"></script>
 <script src="leaflet.js"></script>
 
 <script>
 
-L.CRS.SeatGeek = L.extend({}, L.CRS, {
-  projection: L.Projection.LonLat,
-	transformation: new L.Transformation(0.35, 0, 0.35, 0),
+  var POLY_OPTS = {
+    weight: 0,
+    fillOpacity: 0.4,
+    clickable: false
+  };
 
-	scale: function (zoom) {
-		return Math.pow(2, zoom);
-	}
-});
+  L.CRS.SeatGeek = L.extend({}, L.CRS, {
+    projection: L.Projection.LonLat,
+  	transformation: new L.Transformation(0.35, 0, 0.35, 0),
+  	scale: function (zoom) {
+  		return Math.pow(2, zoom);
+  	}
+  });
 
-var map = L.map("map", {
-  minZoom: 1,
-  maxZoom: 4,
-  crs: L.CRS.SeatGeek
-}).setView([500, 500], 1);
+  var map = L.map("map", {
+    minZoom: 1,
+    maxZoom: 4,
+    crs: L.CRS.SeatGeek
+  }).setView([500, 500], 1);
 
-L.tileLayer('http://{s}.tiles.seatgeek.com/v3/maps/{mapId}/{z}/{x}/{y}.png', {
-  mapId: "v3719-1933-2",
-  tileSize: 350,
-  minZoom: 1,
-  maxZoom: 4,
-  noWrap: true
-}).addTo(map);
+  L.tileLayer('http://{s}.tiles.seatgeek.com/v3/maps/{mapId}/{z}/{x}/{y}.png', {
+    mapId: "v3719-1933-2",
+    tileSize: 350,
+    minZoom: 1,
+    maxZoom: 4,
+    noWrap: true
+  }).addTo(map);
 
-var circle = L.circle([600, 600], -3400000, {
-    color: 'red',
-    fillColor: '#f03',
-    fillOpacity: 0.5
-}).addTo(map);
+  $.ajax({
+    dataType: "json",
+    url: "http://tiles.seatgeek.com/v3/maps/v3719-1933-2.json",
+    cache: true,
+    success: function (map_data) {
+      map.mapData = map_data;
+      render();
+    }
+  });
 
+function render() {
+  var x = 0;
+  _.each(map.mapData.sections, function (section, sn) {
+    x = (x == 0 ? 1 : 0);
+    if (sn === "_center") return;
+    if (x == 0) {
+      var polyopts = _.extend({ fillColor: '#ffff00' }, POLY_OPTS);
+    } else {
+      var polyopts = _.extend({ fillColor: '#00ff00' }, POLY_OPTS);
+    }
+    (new L.Polygon(pathToPoints(section.path), polyopts)).addTo(map)
+  });
+}
+
+function pathToPoints (path) {
+  var xs = _.map(path.slice(1).split(" "), function (x) { return parseFloat(x, 10); }),
+      pts = [];
+  for (var i = 0; i < xs.length; i += 2) {
+    pts.push([xs[i + 1], xs[i]]);
+  }
+  return pts;
+}
 
 </script>
-
 
 </body>
 </html>
